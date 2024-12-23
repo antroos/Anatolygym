@@ -71,6 +71,46 @@ def calculate_angles(landmarks):
     return {
         "shoulder-elbow-wrist-left": angle_sew_left
     }
+def compare_angles_lists(trainer_angles, client_angles):
+    """
+    trainer_angles и client_angles — это списки, возвращённые analyze_video().
+    Сравниваем их покадрово (по минимальному количеству кадров),
+    и считаем разницу углов.
+    Возвращаем список словарей вида:
+    [
+      {
+        "shoulder-elbow-wrist-left": {
+          "trainer_angle": 165.12,
+          "client_angle": 160.34,
+          "difference": 4.78
+        }
+      },
+      ...
+    ]
+    """
+    # Определяем, сколько кадров сравним (берём минимальную длину)
+    min_len = min(len(trainer_angles), len(client_angles))
+
+    comparison_results = []
+
+    for i in range(min_len):
+        frame_diff = {}
+        trainer_frame = trainer_angles[i]
+        client_frame = client_angles[i]
+
+        # Проходим по всем углам, которые есть в trainer_frame
+        for angle_name, trainer_value in trainer_frame.items():
+            client_value = client_frame.get(angle_name, None)
+            if client_value is not None:
+                diff = abs(trainer_value - client_value)
+                frame_diff[angle_name] = {
+                    "trainer_angle": trainer_value,
+                    "client_angle": client_value,
+                    "difference": diff
+                }
+        comparison_results.append(frame_diff)
+
+    return comparison_results
 
 
 def analyze_video(video_path):
